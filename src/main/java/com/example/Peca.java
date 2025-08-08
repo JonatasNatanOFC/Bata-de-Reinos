@@ -1,6 +1,6 @@
 package com.example;
 
-public class Peca {
+public abstract class Peca {
     private final String nome;
     private final String simbolo;
     private int posicaoX;
@@ -8,7 +8,7 @@ public class Peca {
     private final Jogador jogadorDono;
     private final MovimentoStrategy movimentoStrategy;
 
-    public Peca(String nome, String simbolo, int x, int y, Jogador dono, MovimentoStrategy strategy) {
+    protected Peca(String nome, String simbolo, int x, int y, Jogador dono, MovimentoStrategy strategy) {
         this.nome = nome;
         this.simbolo = simbolo;
         this.posicaoX = x;

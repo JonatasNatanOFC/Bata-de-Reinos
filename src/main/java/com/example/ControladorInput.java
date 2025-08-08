@@ -2,7 +2,7 @@ package com.example;
 
 import java.util.Scanner;
 
-public class ControladorInput {
+public class ControladorInput implements AutoCloseable {
     private final Scanner scanner;
 
     public ControladorInput() {
@@ -33,12 +33,25 @@ public class ControladorInput {
         }
     }
 
+    public int pedirIndice(String mensagem) {
+        while (true) {
+            try {
+                System.out.print(mensagem + " ");
+                String linha = scanner.nextLine();
+                return Integer.parseInt(linha.trim());
+            } catch (NumberFormatException e) {
+                System.out.println("Erro: Entrada inválida. Por favor, insira apenas um número.");
+            }
+        }
+    }
+
     public void esperarEnter() {
         System.out.println("\nPressione ENTER para continuar...");
         scanner.nextLine();
     }
 
-    public void fecharScanner() {
+    @Override
+    public void close() {
         scanner.close();
     }
 }

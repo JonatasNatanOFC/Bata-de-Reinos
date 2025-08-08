@@ -24,7 +24,7 @@ public class RenderizadorTabuleiro {
                     }
                 }
             }
-            System.out.println(" " + y);
+            System.out.println();
             System.out.println("   +---+---+---+---+---+---+---+---+");
         }
     }

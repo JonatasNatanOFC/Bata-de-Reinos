@@ -6,10 +6,9 @@ public class Main {
         System.out.println("==================================");
 
         RenderizadorTabuleiro renderizador = new RenderizadorTabuleiro();
-        ControladorInput controlador = new ControladorInput();
-
-        Jogo jogo = Jogo.getInstancia(renderizador, controlador);
-
-        jogo.iniciar();
+        try (ControladorInput controlador = new ControladorInput()) {
+            Jogo jogo = new Jogo(renderizador, controlador);
+            jogo.iniciar();
+        }
     }
 }

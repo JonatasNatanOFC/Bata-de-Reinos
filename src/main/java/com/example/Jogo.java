@@ -2,7 +2,6 @@ package com.example;
 
 public class Jogo {
     public static final int TAMANHO_TABULEIRO = 8;
-    private static Jogo instancia;
 
     private final Peca[][] tabuleiro;
     private final Jogador jogador1;
@@ -12,7 +11,7 @@ public class Jogo {
     private final RenderizadorTabuleiro renderizador;
     private final ControladorInput controlador;
 
-    private Jogo(RenderizadorTabuleiro renderizador, ControladorInput controlador) {
+    public Jogo(RenderizadorTabuleiro renderizador, ControladorInput controlador) {
         this.tabuleiro = new Peca[TAMANHO_TABULEIRO][TAMANHO_TABULEIRO];
         this.jogador1 = new Jogador("Jogador 1 (Brancas - MAIÚSCULAS)");
         this.jogador2 = new Jogador("Jogador 2 (Pretas - minúsculas)");
@@ -22,16 +21,10 @@ public class Jogo {
         configurarTabuleiroInicial();
     }
 
-    public static Jogo getInstancia(RenderizadorTabuleiro renderizador, ControladorInput controlador) {
-        if (instancia == null) {
-            instancia = new Jogo(renderizador, controlador);
-        }
-        return instancia;
-    }
-
     public void iniciar() {
         while (true) {
             renderizador.exibir(tabuleiro, jogadorAtual);
+            exibirPecasDoJogadorAtual();
 
             if (!realizarTurno()) {
                 System.out.println("Jogada inválida. Tente novamente.");
@@ -47,32 +40,30 @@ public class Jogo {
 
             trocarJogador();
         }
-        controlador.fecharScanner();
     }
 
     private boolean realizarTurno() {
-        int[] posOrigem = controlador.pedirCoordenadas("Digite as coordenadas da peça a mover (X Y):");
-        int xOrigem = posOrigem[0];
-        int yOrigem = posOrigem[1];
-
-        Peca pecaEscolhida = tabuleiro[xOrigem][yOrigem];
-
-        if (pecaEscolhida == null) {
-            System.out.println("Erro: Não há nenhuma peça nesta posição.");
+        java.util.List<Peca> pecasDoJogador = jogadorAtual.getPecas();
+        if (pecasDoJogador.isEmpty()) {
             return false;
         }
-        if (!pecaEscolhida.getJogadorDono().equals(jogadorAtual)) {
-            System.out.println("Erro: Esta peça não pertence a você.");
+        
+        int indiceEscolhido = controlador.pedirIndice("Escolha o número da peça a mover:");
+        if (indiceEscolhido < 1 || indiceEscolhido > pecasDoJogador.size()) {
+            System.out.println("Erro: Número de peça inválido.");
             return false;
         }
 
-        System.out.printf("Peça escolhida: %s em [%d, %d].\n", pecaEscolhida.getNome(), xOrigem, yOrigem);
+        Peca pecaEscolhida = pecasDoJogador.get(indiceEscolhido - 1);
+
+        System.out.printf("Peça escolhida: %s.\n", pecaEscolhida.toString());
         int[] posDestino = controlador.pedirCoordenadas("Para onde deseja mover? (X Y):");
         int novoX = posDestino[0];
         int novoY = posDestino[1];
 
         if (validarMovimento(pecaEscolhida, novoX, novoY)) {
-            moverPeca(pecaEscolhida, novoX, novoY);
+            Command move = new MoverCommand(pecaEscolhida, novoX, novoY, this.tabuleiro);
+            move.execute();
             return true;
         }
         return false;
@@ -97,20 +88,6 @@ public class Jogo {
         return true;
     }
 
-    private void moverPeca(Peca peca, int novoX, int novoY) {
-        Peca pecaAtacada = tabuleiro[novoX][novoY];
-        if (pecaAtacada != null) {
-            Jogador adversario = pecaAtacada.getJogadorDono();
-            adversario.removerPeca(pecaAtacada);
-            System.out.printf("\n*** ATAQUE! A peça %s do jogador %s foi removida! ***\n",
-                    pecaAtacada.getNome(), adversario.getNome());
-        }
-
-        tabuleiro[peca.getPosicaoX()][peca.getPosicaoY()] = null;
-        peca.moverPara(novoX, novoY);
-        tabuleiro[novoX][novoY] = peca;
-    }
-
     private boolean verificarFimDeJogo() {
         Jogador adversario = (jogadorAtual == jogador1) ? jogador2 : jogador1;
         return !adversario.aindaTemPecas();
@@ -118,6 +95,15 @@ public class Jogo {
 
     private void trocarJogador() {
         jogadorAtual = (jogadorAtual == jogador1) ? jogador2 : jogador1;
+    }
+
+    private void exibirPecasDoJogadorAtual() {
+        System.out.println("\nPeças disponíveis para " + jogadorAtual.getNome() + ":");
+        java.util.List<Peca> pecas = jogadorAtual.getPecas();
+        for (int i = 0; i < pecas.size(); i++) {
+            System.out.printf("%d. %s\n", i + 1, pecas.get(i).toString());
+        }
+        System.out.println();
     }
 
     private void configurarTabuleiroInicial() {
